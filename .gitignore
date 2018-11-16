@@ -1,0 +1,5 @@
+merger/target/
+target/src/
+target/build/
+.idea/
+*.iml
