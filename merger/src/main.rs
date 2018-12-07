@@ -1,13 +1,16 @@
 
-extern crate shared;
-//#[macro_use]
-extern crate util;
+#![allow(dead_code)]
 
-use shared::*;
-use shared::repo::Repo;
+#[macro_use]
+extern crate util;
+extern crate git2;
+
+mod git;
+mod repo;
 
 use util::{Tool, ToolInvocation, ToolArgs, ToolArgAccessor, ToolArg};
 use util::command_queue::{CommandQueue, };
+use self::repo::*;
 
 use std::borrow::Cow;
 use std::error::Error;
@@ -16,10 +19,7 @@ use std::process::Command;
 
 #[derive(Debug, Clone)]
 pub struct Session {
-  ctx: Context,
-  monitor: monitor::Monitor,
-  log_files: LogFiles,
-
+  target_dir: Option<PathBuf>,
   upstream_repo: Repo,
   rust_repo: Repo,
 
@@ -30,10 +30,7 @@ pub struct Session {
 impl Default for Session {
   fn default() -> Session {
     Session {
-      ctx: Default::default(),
-      monitor: Default::default(),
-      log_files: Default::default(),
-
+      target_dir: None,
       upstream_repo: Repo::new_git("upstream-rust", UPSTREAM_RUST_URL, RUST_MAIN_BRANCH),
       rust_repo: Repo::new_git("rust", RUST_URL, RUST_MAIN_BRANCH),
 
@@ -47,21 +44,11 @@ impl Default for Session {
   }
 }
 
-impl Builder for Session {
-  fn context(&self) -> &Context { &self.ctx }
-}
-impl Build for Session {
-  fn target_dir(&self) -> PathBuf { self.ctx.target_dir() }
-  fn output_dir(&self) -> PathBuf { self.ctx.output_dir() }
-}
-impl Shell for Session {
-  fn monitor(&self) -> &monitor::Monitor { &self.monitor }
-  fn log_dir(&self) -> PathBuf { self.ctx.log_dir() }
-  fn log_files(&self) -> &LogFiles { &self.log_files }
-  fn nicely(&self) -> bool { self.context().nicely() }
-}
-
 impl Session {
+  pub fn target_dir(&self) -> &PathBuf {
+    self.target_dir.as_ref()
+      .expect("need `--target-dir`")
+  }
   pub fn rust_src_path(&self) -> PathBuf {
     self.target_dir().join("src")
   }
@@ -73,8 +60,6 @@ impl ToolInvocation for Session {
   {
     match iteration {
       0 => {
-        self.ctx.check_complete();
-
         let rust_src = self.rust_src_path();
 
         // run this outside the command queue:
@@ -146,7 +131,9 @@ impl ToolInvocation for Session {
     let mut out = Cow::Borrowed(C);
 
     match iteration {
-      0 => { return self.ctx.args(); },
+      0 => return tool_arguments! { Self => [
+        TARGET_DIR,
+      ]},
       1 => {
         self.rust_repo
           .args::<Self, RustAccess>(&mut out);
@@ -205,7 +192,6 @@ impl ToolInvocation for Session {
 
         assert!(self.merge_branches.len() < 16)
       },
-      3 => { return self.context().unknown_args(); },
       _ => { return None; },
     }
 
@@ -293,7 +279,7 @@ const RUST_MAIN_BRANCH: &'static str = "master";
 
 const BRANCHES_URL: &'static str = "git@bitbucket.org:DiamondLovesYou/rust-mir-hsa.git";
 const MERGE_BRANCHES: &'static [&'static str] = &[
-  "fix-clang-and-lldb-builds",
+  //"fix-clang-and-lldb-builds",
   "fix-rustc-logging",
   "getopts-deps",
   "rustc-trans-addr-space",
@@ -304,14 +290,27 @@ const MERGE_BRANCHES: &'static [&'static str] = &[
   "reexport-env_logger",
   "polly",
   "amdgpu-intrinsics",
-  "fix-llvm-amdgpu",
+  //"fix-llvm-amdgpu",
+  "amdgcn-dispatch-ptr-intrinsic",
   "tcx-driver-data",
   "syntax-global-new-pub",
   "fix-compiler-docs-parallel-queries",
 ];
 
+tool_argument! {
+  pub TARGET_DIR: Session = single_and_split_abs_path(path) "target-dir" =>
+  fn target_dir_arg(this) {
+    this.target_dir = Some(path);
+  }
+}
+
 impl Session {
 
+}
+pub fn run_unlogged_cmd(task: &str, mut cmd: Command) {
+    println!("({}): Running: {:?}", task, cmd);
+    let mut child = cmd.spawn().unwrap();
+    assert!(child.wait().unwrap().success(), "{:?}", cmd);
 }
 
 pub fn main() {

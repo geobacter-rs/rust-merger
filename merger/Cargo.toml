@@ -3,8 +3,9 @@ authors = ["Richard Diamond <wichard@vitalitystudios.com>"]
 edition = "2018"
 name = "merger"
 version = "0.1.0"
-[dependencies.shared]
-path = "../../modkit/builder/shared"
+
+[dependencies]
+git2 = "0.6.5"
 
 [dependencies.util]
-path = "../../modkit/builder/wasm-tc/src/util"
+git = "https://github.com/DiamondLovesYou/pnacl-clang-driver.git"
