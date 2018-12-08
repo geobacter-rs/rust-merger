@@ -250,6 +250,7 @@ impl Tool for Session {
       .arg("update")
       .arg("--checkout")
       .arg("--init")
+      .arg("--recursive")
       .arg("--jobs")
       .arg("4");
     queue.enqueue_simple_external(Some("update submodules"),
