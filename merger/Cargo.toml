@@ -5,7 +5,7 @@ name = "merger"
 version = "0.1.0"
 
 [dependencies]
-git2 = "0.6.5"
+git2 = "0.7.0"
 
 [dependencies.util]
 git = "https://github.com/DiamondLovesYou/pnacl-clang-driver.git"
