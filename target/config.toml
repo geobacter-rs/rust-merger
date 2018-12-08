@@ -31,7 +31,7 @@
 release-debuginfo = true
 
 # Indicates whether the LLVM assertions are enabled or not
-assertions = true
+assertions = false
 
 # Indicates whether ccache is used when building LLVM
 ccache = true
