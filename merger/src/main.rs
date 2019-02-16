@@ -20,7 +20,7 @@ use std::process::Command;
 #[derive(Debug, Clone)]
 pub struct Session {
   target_dir: Option<PathBuf>,
-  upstream_repo: Repo,
+  fork_base: Repo,
   rust_repo: Repo,
 
   /// these aren't checked out:
@@ -31,8 +31,8 @@ impl Default for Session {
   fn default() -> Session {
     Session {
       target_dir: None,
-      upstream_repo: Repo::new_git("upstream-rust", UPSTREAM_RUST_URL, RUST_MAIN_BRANCH),
-      rust_repo: Repo::new_git("rust", RUST_URL, RUST_MAIN_BRANCH),
+      fork_base: Repo::new_git("rust-upstream", RUST_URL, RUST_FORK_BASE_BRANCH),
+      rust_repo: Repo::new_git("rust", RUST_URL, FORK_HEAD_BRANCH),
 
       merge_branches: MERGE_BRANCHES.iter()
         .map(|&branch| {
@@ -78,7 +78,7 @@ impl ToolInvocation for Session {
       },
       1 => {
         let dest = self.rust_src_path();
-        self.rust_repo.checkout_fat(&dest)
+        self.fork_base.checkout_fat(&dest)
       },
       _ => Ok(()),
     }
@@ -92,10 +92,10 @@ impl ToolInvocation for Session {
         &mut this.rust_repo
       }
     }
-    struct UpstreamRustAccess;
-    impl ToolArgAccessor<Session, Repo> for UpstreamRustAccess {
+    struct RustForkBaseAccess;
+    impl ToolArgAccessor<Session, Repo> for RustForkBaseAccess {
       fn access(this: &mut Session) -> &mut Repo {
-        &mut this.upstream_repo
+        &mut this.fork_base
       }
     }
 
@@ -126,6 +126,10 @@ impl ToolInvocation for Session {
     merge_branch_access!(Branch13, 13);
     merge_branch_access!(Branch14, 14);
     merge_branch_access!(Branch15, 15);
+      merge_branch_access!(Branch16, 16);
+      merge_branch_access!(Branch17, 17);
+      merge_branch_access!(Branch18, 18);
+      merge_branch_access!(Branch19, 19);
 
     const C: &'static [ToolArg<Session>] = &[];
     let mut out = Cow::Borrowed(C);
@@ -139,8 +143,9 @@ impl ToolInvocation for Session {
           .args::<Self, RustAccess>(&mut out);
       },
       2 => {
-        self.upstream_repo
-          .args::<Self, UpstreamRustAccess>(&mut out);
+        self.fork_base
+          .args::<Self, RustForkBaseAccess>(&mut out);
+
         if let Some(b) = self.merge_branches.get(0) {
           b.args::<Self, Branch0>(&mut out);
         }
@@ -189,8 +194,20 @@ impl ToolInvocation for Session {
           if let Some(b) = self.merge_branches.get(15) {
               b.args::<Self, Branch15>(&mut out);
           }
+          if let Some(b) = self.merge_branches.get(16) {
+              b.args::<Self, Branch16>(&mut out);
+          }
+          if let Some(b) = self.merge_branches.get(17) {
+              b.args::<Self, Branch17>(&mut out);
+          }
+          if let Some(b) = self.merge_branches.get(18) {
+              b.args::<Self, Branch18>(&mut out);
+          }
+          if let Some(b) = self.merge_branches.get(19) {
+              b.args::<Self, Branch19>(&mut out);
+          }
 
-        assert!(self.merge_branches.len() < 16)
+        assert!(self.merge_branches.len() < 20)
       },
       _ => { return None; },
     }
@@ -216,7 +233,7 @@ impl Tool for Session {
 
     self.rust_repo
       .add_remote_from(&rust_src,
-                       &self.upstream_repo,
+                       &self.fork_base,
                        queue)?;
 
     for branch in self.merge_branches.iter() {
@@ -227,8 +244,8 @@ impl Tool for Session {
     self.rust_repo.update_remotes(&rust_src, queue);
 
     self.rust_repo.create_or_reset_branch(&rust_src,
-                                          "mir-hsa-merge-head",
-                                          &self.upstream_repo,
+                                          FORK_HEAD_BRANCH,
+                                          &self.fork_base,
                                           queue)?;
 
     for branch in self.merge_branches.iter() {
@@ -273,14 +290,12 @@ impl Tool for Session {
   }
 }
 
-const UPSTREAM_RUST_URL: &'static str = "https://github.com/rust-lang/rust.git";
-const RUST_URL: &'static str = "git@github.com:DiamondLovesYou/rust.git";
-const RUST_MAIN_BRANCH: &'static str = "master";
+const RUST_URL: &'static str = "git@bitbucket.org:vitalitystudioslegionella/rust-mir-hsa.git";
+const RUST_FORK_BASE_BRANCH: &'static str = "fork-base";
+const FORK_HEAD_BRANCH: &'static str = "mir-hsa-merge-head";
 
-
-const BRANCHES_URL: &'static str = "git@bitbucket.org:DiamondLovesYou/rust-mir-hsa.git";
+const BRANCHES_URL: &'static str = RUST_URL;
 const MERGE_BRANCHES: &'static [&'static str] = &[
-  //"fix-clang-and-lldb-builds",
   "fix-rustc-logging",
   "getopts-deps",
   "rustc-trans-addr-space",
@@ -289,13 +304,24 @@ const MERGE_BRANCHES: &'static [&'static str] = &[
   "always-export-metadata",
   "make-metadata-schema-pub",
   "reexport-env_logger",
-  "polly",
-  "amdgpu-intrinsics",
+  // this branch is included in `no-target-machine-polly` due to some conflicts which
+  // have to be resolved manually.
+  //"polly",
+
+  // Old branches used for targeting amdgpu directly.
+  //"amdgpu-intrinsics",
   //"fix-llvm-amdgpu",
-  "amdgcn-dispatch-ptr-intrinsic",
+  //"amdgcn-dispatch-ptr-intrinsic",
+
   "tcx-driver-data",
   "syntax-global-new-pub",
   "fix-compiler-docs-parallel-queries",
+  "spir-kernel-cconv",
+  "llvm-spirv-tools",
+  "spirv-llvm-metadata",
+  "session-plugin-no-overwrite",
+  "no-target-machine-polly",
+  "spirv-abi-info",
 ];
 
 tool_argument! {
