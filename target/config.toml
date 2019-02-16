@@ -28,7 +28,7 @@
 #thin-lto = false
 
 # Indicates whether an LLVM Release build should include debug info
-release-debuginfo = true
+release-debuginfo = false
 
 # Indicates whether the LLVM assertions are enabled or not
 assertions = false
@@ -130,7 +130,7 @@ targets = "X86;ARM;AMDGPU;AArch64;Mips;PowerPC;SystemZ;MSP430;Sparc;NVPTX;Hexago
 compiler-docs = true
 
 # Indicate whether submodules are managed and updated automatically.
-submodules = false
+submodules = true
 
 # Update submodules only when the checked out commit in the submodules differs
 # from what is committed in the main rustc repo.
@@ -198,6 +198,8 @@ configure-args = ['--enable-ninja', '--enable-ccache']
 
 # Indicates that a local rebuild is occurring instead of a full bootstrap,
 # essentially skipping stage0 as the local compiler is recompiling itself again.
+# Legionella needs this to be false. This is because we require the presence of
+# the compiler crate's crate metadata which won't happen if stage0 is skipped.
 local-rebuild = false
 
 # Print out how long each rustbuild step took (mostly intended for CI and
@@ -293,7 +295,7 @@ debuginfo = true
 #incremental = false
 
 # Build rustc with experimental parallelization
-experimental-parallel-queries = true
+parallel-compiler = true
 
 # The default linker that will be hard-coded into the generated compiler for
 # targets that don't specify linker explicitly in their target specifications.
@@ -481,4 +483,3 @@ ar = "ar"
 # as the one built on Windows will contain backslashes in paths causing problems
 # on linux
 #src-tarball = true
-
