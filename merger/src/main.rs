@@ -290,9 +290,9 @@ impl Tool for Session {
   }
 }
 
-const RUST_URL: &'static str = "git@bitbucket.org:vitalitystudioslegionella/rust-mir-hsa.git";
+const RUST_URL: &'static str = "git@github.com:legionella-rs/rust.git";
 const RUST_FORK_BASE_BRANCH: &'static str = "fork-base";
-const FORK_HEAD_BRANCH: &'static str = "mir-hsa-merge-head";
+const FORK_HEAD_BRANCH: &'static str = "merge-head";
 
 const BRANCHES_URL: &'static str = RUST_URL;
 const MERGE_BRANCHES: &'static [&'static str] = &[
