@@ -126,10 +126,10 @@ impl ToolInvocation for Session {
     merge_branch_access!(Branch13, 13);
     merge_branch_access!(Branch14, 14);
     merge_branch_access!(Branch15, 15);
-      merge_branch_access!(Branch16, 16);
-      merge_branch_access!(Branch17, 17);
-      merge_branch_access!(Branch18, 18);
-      merge_branch_access!(Branch19, 19);
+    merge_branch_access!(Branch16, 16);
+    merge_branch_access!(Branch17, 17);
+    merge_branch_access!(Branch18, 18);
+    merge_branch_access!(Branch19, 19);
 
     const C: &'static [ToolArg<Session>] = &[];
     let mut out = Cow::Borrowed(C);
@@ -171,41 +171,41 @@ impl ToolInvocation for Session {
           b.args::<Self, Branch7>(&mut out);
         }
         if let Some(b) = self.merge_branches.get(8) {
-            b.args::<Self, Branch8>(&mut out);
+          b.args::<Self, Branch8>(&mut out);
         }
         if let Some(b) = self.merge_branches.get(9) {
-            b.args::<Self, Branch9>(&mut out);
+          b.args::<Self, Branch9>(&mut out);
         }
         if let Some(b) = self.merge_branches.get(10) {
-            b.args::<Self, Branch10>(&mut out);
+          b.args::<Self, Branch10>(&mut out);
         }
-          if let Some(b) = self.merge_branches.get(11) {
-              b.args::<Self, Branch11>(&mut out);
-          }
-          if let Some(b) = self.merge_branches.get(12) {
-              b.args::<Self, Branch12>(&mut out);
-          }
-          if let Some(b) = self.merge_branches.get(13) {
-              b.args::<Self, Branch13>(&mut out);
-          }
-          if let Some(b) = self.merge_branches.get(14) {
-              b.args::<Self, Branch14>(&mut out);
-          }
-          if let Some(b) = self.merge_branches.get(15) {
-              b.args::<Self, Branch15>(&mut out);
-          }
-          if let Some(b) = self.merge_branches.get(16) {
-              b.args::<Self, Branch16>(&mut out);
-          }
-          if let Some(b) = self.merge_branches.get(17) {
-              b.args::<Self, Branch17>(&mut out);
-          }
-          if let Some(b) = self.merge_branches.get(18) {
-              b.args::<Self, Branch18>(&mut out);
-          }
-          if let Some(b) = self.merge_branches.get(19) {
-              b.args::<Self, Branch19>(&mut out);
-          }
+        if let Some(b) = self.merge_branches.get(11) {
+          b.args::<Self, Branch11>(&mut out);
+        }
+        if let Some(b) = self.merge_branches.get(12) {
+          b.args::<Self, Branch12>(&mut out);
+        }
+        if let Some(b) = self.merge_branches.get(13) {
+          b.args::<Self, Branch13>(&mut out);
+        }
+        if let Some(b) = self.merge_branches.get(14) {
+          b.args::<Self, Branch14>(&mut out);
+        }
+        if let Some(b) = self.merge_branches.get(15) {
+          b.args::<Self, Branch15>(&mut out);
+        }
+        if let Some(b) = self.merge_branches.get(16) {
+          b.args::<Self, Branch16>(&mut out);
+        }
+        if let Some(b) = self.merge_branches.get(17) {
+          b.args::<Self, Branch17>(&mut out);
+        }
+        if let Some(b) = self.merge_branches.get(18) {
+          b.args::<Self, Branch18>(&mut out);
+        }
+        if let Some(b) = self.merge_branches.get(19) {
+          b.args::<Self, Branch19>(&mut out);
+        }
 
         assert!(self.merge_branches.len() < 20)
       },
@@ -335,9 +335,9 @@ impl Session {
 
 }
 pub fn run_unlogged_cmd(task: &str, mut cmd: Command) {
-    println!("({}): Running: {:?}", task, cmd);
-    let mut child = cmd.spawn().unwrap();
-    assert!(child.wait().unwrap().success(), "{:?}", cmd);
+  println!("({}): Running: {:?}", task, cmd);
+  let mut child = cmd.spawn().unwrap();
+  assert!(child.wait().unwrap().success(), "{:?}", cmd);
 }
 
 pub fn main() {
