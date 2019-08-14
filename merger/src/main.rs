@@ -2,15 +2,11 @@
 #![allow(dead_code)]
 
 #[macro_use]
-extern crate util;
-extern crate git2;
-
-mod git;
-mod repo;
+extern crate wasm_driver_utils as util;
 
 use util::{Tool, ToolInvocation, ToolArgs, ToolArgAccessor, ToolArg};
 use util::command_queue::{CommandQueue, };
-use self::repo::*;
+use util::repo::*;
 
 use std::borrow::Cow;
 use std::error::Error;
@@ -56,7 +52,7 @@ impl Session {
 
 impl ToolInvocation for Session {
   fn check_state(&mut self, iteration: usize, _skip_inputs_check: bool)
-                 -> Result<(), Box<Error>>
+                 -> Result<(), Box<dyn Error>>
   {
     match iteration {
       0 => {
@@ -218,7 +214,7 @@ impl ToolInvocation for Session {
 
 impl Tool for Session {
   fn enqueue_commands(&mut self, queue: &mut CommandQueue<Self>)
-                      -> Result<(), Box<Error>>
+                      -> Result<(), Box<dyn Error>>
   {
     let rust_src = self.rust_src_path();
 
@@ -249,9 +245,21 @@ impl Tool for Session {
                                           queue)?;
 
     for branch in self.merge_branches.iter() {
+      let name = branch.name.to_string();
+      queue.enqueue_function(None::<String>, move |_| {
+        println!();
+        println!("*** merging branch {}:", name);
+        Ok(())
+      });
       self.rust_repo
         .merge_branch(&rust_src, branch, queue)?;
     }
+
+    queue.enqueue_function(None::<String>, move |_| {
+      println!();
+      println!("finished merging");
+      Ok(())
+    });
 
     let mut cmd = Command::new("git");
     cmd.current_dir(&rust_src)
@@ -279,7 +287,7 @@ impl Tool for Session {
   fn get_name(&self) -> String {
     "rust-dist-merger".to_string()
   }
-  fn add_tool_input(&mut self, _i: PathBuf) -> Result<(), Box<Error>> {
+  fn add_tool_input(&mut self, _i: PathBuf) -> Result<(), Box<dyn Error>> {
     unimplemented!();
   }
   fn get_output(&self) -> Option<&PathBuf> {
@@ -296,32 +304,29 @@ const FORK_HEAD_BRANCH: &'static str = "merge-head";
 
 const BRANCHES_URL: &'static str = RUST_URL;
 const MERGE_BRANCHES: &'static [&'static str] = &[
-  "fix-rustc-logging",
-  "getopts-deps",
   "rustc-trans-addr-space",
   "addr-space-attr",
+  "amdgcn-dispatch-ptr-intrinsic",
   "plugin-intrinsics",
   "always-export-metadata",
   "make-metadata-schema-pub",
-  "reexport-env_logger",
   // this branch is included in `no-target-machine-polly` due to some conflicts which
   // have to be resolved manually.
   //"polly",
 
-  // Old branches used for targeting amdgpu directly.
-  //"amdgpu-intrinsics",
-  //"fix-llvm-amdgpu",
-  //"amdgcn-dispatch-ptr-intrinsic",
+  "llvm-patches",
 
   "tcx-driver-data",
   "syntax-global-new-pub",
   "fix-compiler-docs-parallel-queries",
   "spir-kernel-cconv",
-  "llvm-spirv-tools",
+  //"llvm-spirv-tools",
   "spirv-llvm-metadata",
   "session-plugin-no-overwrite",
   "no-target-machine-polly",
   "spirv-abi-info",
+  "export-rayon",
+  "rocm-atomic-fence-scopes",
 ];
 
 tool_argument! {

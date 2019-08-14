@@ -4,8 +4,6 @@ edition = "2018"
 name = "merger"
 version = "0.1.0"
 
-[dependencies]
-git2 = "0.7.0"
-
-[dependencies.util]
+[dependencies.wasm-driver-utils]
 git = "https://github.com/DiamondLovesYou/pnacl-clang-driver.git"
+version = "1.0.0"
