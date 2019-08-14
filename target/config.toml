@@ -14,10 +14,6 @@
 # =============================================================================
 [llvm]
 
-# Indicates whether rustc will support compilation with LLVM
-# note: rustc does not compile without LLVM at the moment
-#enabled = true
-
 # Indicates whether the LLVM build is a Release or Debug build
 #optimize = true
 
@@ -28,10 +24,10 @@
 #thin-lto = false
 
 # Indicates whether an LLVM Release build should include debug info
-release-debuginfo = false
+release-debuginfo = true
 
 # Indicates whether the LLVM assertions are enabled or not
-assertions = false
+assertions = true
 
 # Indicates whether ccache is used when building LLVM
 ccache = true
@@ -76,7 +72,7 @@ targets = "X86;ARM;AMDGPU;AArch64;Mips;PowerPC;SystemZ;MSP430;Sparc;NVPTX;Hexago
 # each linker process.
 # If absent or 0, linker invocations are treated like any other job and
 # controlled by rustbuild's -j parameter.
-#link-jobs = 0
+link-jobs = 3
 
 # When invoking `llvm-config` this configures whether the `--shared` argument is
 # passed to prefer linking to shared libraries.
@@ -89,6 +85,23 @@ targets = "X86;ARM;AMDGPU;AArch64;Mips;PowerPC;SystemZ;MSP430;Sparc;NVPTX;Hexago
 # On MSVC you can compile LLVM with clang-cl, but the test suite doesn't pass
 # with clang-cl, so this is special in that it only compiles LLVM with clang-cl
 #clang-cl = '/path/to/clang-cl.exe'
+
+# Pass extra compiler and linker flags to the LLVM CMake build.
+#cflags = "-fextra-flag"
+#cxxflags = "-fextra-flag"
+#ldflags = "-Wl,extra-flag"
+
+# Use libc++ when building LLVM instead of libstdc++. This is the default on
+# platforms already use libc++ as the default C++ library, but this option
+# allows you to use libc++ even on platforms when it's not. You need to ensure
+# that your host compiler ships with libc++.
+#use-libcxx = true
+
+# The value specified here will be passed as `-DLLVM_USE_LINKER` to CMake.
+#use-linker = "lld"
+
+# Whether or not to specify `-DLLVM_TEMPORARILY_ALLOW_OLD_TOOLCHAIN=YES`
+#allow-old-toolchain = false
 
 # =============================================================================
 # General build configuration options
@@ -147,6 +160,9 @@ submodules = true
 # Python interpreter to use for various tasks throughout the build, notably
 # rustdoc tests, the lldb python interpreter, and some dist bits and pieces.
 # Note that Python 2 is currently required.
+#
+# Defaults to python2.7, then python2. If neither executable can be found, then
+# it defaults to the Python interpreter used to execute x.py.
 #python = "python2.7"
 
 # Force Cargo to check that Cargo.lock describes the precise dependency
@@ -161,7 +177,7 @@ submodules = true
 # would rather to perform a full bootstrap, compiling the compiler three times,
 # then you can set this option to true. You shouldn't ever need to set this
 # option to true.
-#full-bootstrap = true
+#full-bootstrap = false
 
 # Enable a build of the extended rust tool set which is not only the compiler
 # but also tools such as Cargo. This will also produce "combined installers"
@@ -171,10 +187,10 @@ submodules = true
 
 # Installs chosen set of extended tools if enables. By default builds all.
 # If chosen tool failed to build the installation fails.
-#tools = ["cargo", "rls", "rustfmt", "analysis", "src"]
+#tools = ["cargo", "rls", "clippy", "rustfmt", "analysis", "src"]
 
 # Verbosity level: 0 == not verbose, 1 == verbose, 2 == very verbose
-verbose = 2
+verbose = 0
 
 # Build the sanitizer runtimes
 #sanitizers = false
@@ -182,14 +198,13 @@ verbose = 2
 # Build the profiler runtime
 #profiler = false
 
-# Indicates whether the OpenSSL linked into Cargo will be statically linked or
-# not. If static linkage is specified then the build system will download a
-# known-good version of OpenSSL, compile it, and link it to Cargo.
-#openssl-static = false
+# Indicates whether the native libraries linked into Cargo will be statically
+# linked or not.
+#cargo-native-static = false
 
 # Run the build with low priority, by setting the process group's "nice" value
 # to +10 on Unix platforms, and by using a "low priority" job object on Windows.
-#low-priority = false
+low-priority = true
 
 # Arguments passed to the `./configure` script, used during distcheck. You
 # probably won't fill this in but rather it's filled in by the `./configure`
@@ -245,56 +260,78 @@ local-rebuild = false
 # =============================================================================
 [rust]
 
-# Indicates that the build should be optimized for debugging Rust. Note that
-# this is typically not what you want as it takes an incredibly large amount of
-# time to have a debug-mode rustc compile any code (notably libstd). If this
-# value is set to `true` it will affect a number of configuration options below
-# as well, if unconfigured.
-#debug = false
-
-# Whether or not to optimize the compiler and standard library
+# Whether or not to optimize the compiler and standard library.
+#
 # Note: the slowness of the non optimized compiler compiling itself usually
 #       outweighs the time gains in not doing optimizations, therefore a
-#       full bootstrap takes much more time with optimize set to false.
+#       full bootstrap takes much more time with `optimize` set to false.
 #optimize = true
+
+# Indicates that the build should be configured for debugging Rust. A
+# `debug`-enabled compiler and standard library will be somewhat
+# slower (due to e.g. checking of debug assertions) but should remain
+# usable.
+#
+# Note: If this value is set to `true`, it will affect a number of
+#       configuration options below as well, if they have been left
+#       unconfigured in this file.
+#
+# Note: changes to the `debug` setting do *not* affect `optimize`
+#       above. In theory, a "maximally debuggable" environment would
+#       set `optimize` to `false` above to assist the introspection
+#       facilities of debuggers like lldb and gdb. To recreate such an
+#       environment, explicitly set `optimize` to `false` and `debug`
+#       to `true`. In practice, everyone leaves `optimize` set to
+#       `true`, because an unoptimized rustc with debugging
+#       enabled becomes *unusably slow* (e.g. rust-lang/rust#24840
+#       reported a 25x slowdown) and bootstrapping the supposed
+#       "maximally debuggable" environment (notably libstd) takes
+#       hours to build.
+#
+#debug = false
 
 # Number of codegen units to use for each compiler invocation. A value of 0
 # means "the number of cores on this machine", and 1+ is passed through to the
 # compiler.
 #codegen-units = 1
 
+# Sets the number of codegen units to build the standard library with,
+# regardless of what the codegen-unit setting for the rest of the compiler is.
+#codegen-units-std = 1
+
 # Whether or not debug assertions are enabled for the compiler and standard
-# library. Also enables compilation of debug! and trace! logging macros.
+# library.
 #debug-assertions = false
 
-# Whether or not debuginfo is emitted
-debuginfo = true
+# Debuginfo level for most of Rust code, corresponds to the `-C debuginfo=N` option of `rustc`.
+# `0` - no debug info
+# `1` - line tables only
+# `2` - full debug info with variable and type information
+# Can be overriden for specific subsets of Rust code (rustc, std or tools).
+# Debuginfo for tests run with compiletest is not controlled by this option
+# and needs to be enabled separately with `debuginfo-level-tests`.
+debuginfo-level = 2
 
-# Whether or not line number debug information is emitted
-#debuginfo-lines = false
+# Debuginfo level for the compiler.
+#debuginfo-level-rustc = debuginfo-level
 
-# Whether or not to only build debuginfo for the standard library if enabled.
-# If enabled, this will not compile the compiler with debuginfo, just the
-# standard library.
-#debuginfo-only-std = false
+# Debuginfo level for the standard library.
+#debuginfo-level-std = debuginfo-level
 
-# Enable debuginfo for the extended tools: cargo, rls, rustfmt
-# Adding debuginfo makes them several times larger.
-#debuginfo-tools = false
+# Debuginfo level for the tools.
+#debuginfo-level-tools = debuginfo-level
 
-# Whether or not jemalloc is built and enabled
-#use-jemalloc = true
-
-# Whether or not jemalloc is built with its debug option set
-#debug-jemalloc = false
+# Debuginfo level for the test suites run with compiletest.
+# FIXME(#61117): Some tests fail when this option is enabled.
+#debuginfo-level-tests = 0
 
 # Whether or not `panic!`s generate backtraces (RUST_BACKTRACE)
 #backtrace = true
 
 # Whether to always use incremental compilation when building rustc
-#incremental = false
+incremental = true
 
-# Build rustc with experimental parallelization
+# Build a multi-threaded rustc
 parallel-compiler = true
 
 # The default linker that will be hard-coded into the generated compiler for
@@ -317,10 +354,12 @@ parallel-compiler = true
 # harness are debuggable just from logfiles.
 #verbose-tests = false
 
-# Flag indicating whether tests are compiled with optimizations (the -O flag) or
-# with debuginfo (the -g flag)
+# Flag indicating whether tests are compiled with optimizations (the -O flag).
 #optimize-tests = true
-#debuginfo-tests = true
+
+# Flag indicating whether tests are optimized with Polly. If optimize-tests is false,
+# polly-tests will be false regardless of its value here.
+#polly-tests = false
 
 # Flag indicating whether codegen tests will be run or not. If you get an error
 # saying that the FileCheck executable is missing, you may want to disable this.
@@ -369,7 +408,7 @@ llvm-tools = true
 
 # Indicates whether LLDB will be made available in the sysroot.
 # This is only built if LLVM is also being built.
-lldb = true
+#lldb = false
 
 # Whether to deny warnings in crates
 #deny-warnings = true
@@ -380,9 +419,25 @@ lldb = true
 # Whether to verify generated LLVM IR
 #verify-llvm-ir = false
 
+# Use Polly on the rust compiler itself. If optimize is false, this will be
+# false as well.
+#polly-self = false
+
 # Map all debuginfo paths for libstd and crates to `/rust/$sha/$crate/...`,
 # generally only set for releases
 #remap-debuginfo = false
+
+# Link the compiler against `jemalloc`, where on Linux and OSX it should
+# override the default allocator for rustc and LLVM.
+#jemalloc = false
+
+# Run tests in various test suites with the "nll compare mode" in addition to
+# running the tests in normal mode. Largely only used on CI and during local
+# development of NLL
+#test-compare-mode = false
+
+# Use LLVM libunwind as the implementation for Rust's unwinder.
+#llvm-libunwind = false
 
 # =============================================================================
 # Options for specific targets
@@ -423,10 +478,6 @@ ar = "ar"
 # not, you can specify an explicit file name for it.
 #llvm-filecheck = "/path/to/FileCheck"
 
-# Path to the custom jemalloc static library to link into the standard library
-# by default. This is only used if jemalloc is still enabled above
-#jemalloc = "/path/to/jemalloc/libjemalloc_pic.a"
-
 # If this target is for Android, this option will be required to specify where
 # the NDK for the target lives. This is used to find the C compiler to link and
 # build native code.
@@ -443,6 +494,9 @@ ar = "ar"
 # that this option only makes sense for MUSL targets that produce statically
 # linked binaries
 #musl-root = "..."
+
+# The root location of the `wasm32-wasi` sysroot.
+#wasi-root = "..."
 
 # Used in testing for configuring where the QEMU images are located, you
 # probably don't want to use this.
@@ -483,3 +537,8 @@ ar = "ar"
 # as the one built on Windows will contain backslashes in paths causing problems
 # on linux
 #src-tarball = true
+#
+
+# Whether to allow failures when building tools
+#missing-tools = false
+
