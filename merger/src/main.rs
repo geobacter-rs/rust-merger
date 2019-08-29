@@ -298,7 +298,7 @@ impl Tool for Session {
   }
 }
 
-const RUST_URL: &'static str = "git@github.com:legionella-rs/rust.git";
+const RUST_URL: &'static str = "git@github.com:geobacter-rs/rust.git";
 const RUST_FORK_BASE_BRANCH: &'static str = "fork-base";
 const FORK_HEAD_BRANCH: &'static str = "merge-head";
 
