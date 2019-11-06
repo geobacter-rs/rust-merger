@@ -310,9 +310,7 @@ const MERGE_BRANCHES: &'static [&'static str] = &[
   "plugin-intrinsics",
   "always-export-metadata",
   "make-metadata-schema-pub",
-  // this branch is included in `no-target-machine-polly` due to some conflicts which
-  // have to be resolved manually.
-  //"polly",
+  "polly",
 
   "llvm-patches",
 
@@ -323,7 +321,6 @@ const MERGE_BRANCHES: &'static [&'static str] = &[
   //"llvm-spirv-tools",
   "spirv-llvm-metadata",
   "session-plugin-no-overwrite",
-  "no-target-machine-polly",
   "spirv-abi-info",
   "export-rayon",
   "rocm-atomic-fence-scopes",
