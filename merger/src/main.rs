@@ -324,6 +324,7 @@ const MERGE_BRANCHES: &'static [&'static str] = &[
   "spirv-abi-info",
   "export-rayon",
   "rocm-atomic-fence-scopes",
+  "derive-hash",
 ];
 
 tool_argument! {
