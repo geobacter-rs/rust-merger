@@ -316,15 +316,14 @@ const MERGE_BRANCHES: &'static [&'static str] = &[
 
   "tcx-driver-data",
   "syntax-global-new-pub",
-  "fix-compiler-docs-parallel-queries",
   "spir-kernel-cconv",
-  //"llvm-spirv-tools",
   "spirv-llvm-metadata",
-  "session-plugin-no-overwrite",
   "spirv-abi-info",
   "export-rayon",
   "rocm-atomic-fence-scopes",
   "derive-hash",
+  "resolver-provided-cstore",
+  "undef-static-init",
 ];
 
 tool_argument! {
