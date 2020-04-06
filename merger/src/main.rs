@@ -324,6 +324,7 @@ const MERGE_BRANCHES: &'static [&'static str] = &[
   "derive-hash",
   "resolver-provided-cstore",
   "undef-static-init",
+  "interface-pub-setup-callbacks",
 ];
 
 tool_argument! {
