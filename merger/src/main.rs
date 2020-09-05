@@ -126,6 +126,8 @@ impl ToolInvocation for Session {
     merge_branch_access!(Branch17, 17);
     merge_branch_access!(Branch18, 18);
     merge_branch_access!(Branch19, 19);
+    merge_branch_access!(Branch20, 20);
+    merge_branch_access!(Branch21, 21);
 
     const C: &'static [ToolArg<Session>] = &[];
     let mut out = Cow::Borrowed(C);
@@ -202,8 +204,14 @@ impl ToolInvocation for Session {
         if let Some(b) = self.merge_branches.get(19) {
           b.args::<Self, Branch19>(&mut out);
         }
+        if let Some(b) = self.merge_branches.get(20) {
+          b.args::<Self, Branch20>(&mut out);
+        }
+        if let Some(b) = self.merge_branches.get(21) {
+          b.args::<Self, Branch21>(&mut out);
+        }
 
-        assert!(self.merge_branches.len() < 20)
+        assert!(self.merge_branches.len() < 22)
       },
       _ => { return None; },
     }
@@ -325,6 +333,8 @@ const MERGE_BRANCHES: &'static [&'static str] = &[
   "resolver-provided-cstore",
   "undef-static-init",
   "interface-pub-setup-callbacks",
+  "spirv-llvm-target",
+  "no-zero-sized-array-padding",
 ];
 
 tool_argument! {
