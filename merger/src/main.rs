@@ -323,7 +323,6 @@ const MERGE_BRANCHES: &'static [&'static str] = &[
   "llvm-patches",
 
   "tcx-driver-data",
-  "syntax-global-new-pub",
   "spir-kernel-cconv",
   "spirv-llvm-metadata",
   "spirv-abi-info",
