@@ -319,9 +319,8 @@ const MERGE_BRANCHES: &'static [&'static str] = &[
   "always-export-metadata",
   "make-metadata-schema-pub",
   "polly",
-
+  "miri",
   "llvm-patches",
-
   "tcx-driver-data",
   "spir-kernel-cconv",
   "spirv-llvm-metadata",
