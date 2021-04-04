@@ -95,17 +95,18 @@ impl ToolInvocation for Session {
       }
     }
 
-    macro_rules! merge_branch_access {
-      ($ty_name:ident, $idx:expr) => (
-        struct $ty_name;
-        impl ToolArgAccessor<Session, Repo> for $ty_name {
-          fn access(this: &mut Session) -> &mut Repo {
-            &mut this.merge_branches[$idx]
-          }
-        }
-      );
+    struct BranchIdx<const IDX: usize>;
+    impl<const IDX: usize> ToolArgAccessor<Session, Repo> for BranchIdx<IDX> {
+      fn access(this: &mut Session) -> &mut Repo {
+      &mut this.merge_branches[IDX]
+      }
     }
 
+    macro_rules! merge_branch_access {
+      ($ty_name:ident, $idx:expr) => (
+        type $ty_name = BranchIdx<$idx>;
+      );
+    }
     merge_branch_access!(Branch0, 0);
     merge_branch_access!(Branch1, 1);
     merge_branch_access!(Branch2, 2);
@@ -128,6 +129,15 @@ impl ToolInvocation for Session {
     merge_branch_access!(Branch19, 19);
     merge_branch_access!(Branch20, 20);
     merge_branch_access!(Branch21, 21);
+    merge_branch_access!(Branch22, 22);
+    merge_branch_access!(Branch23, 23);
+    merge_branch_access!(Branch24, 24);
+    merge_branch_access!(Branch25, 25);
+    merge_branch_access!(Branch26, 26);
+    merge_branch_access!(Branch27, 27);
+    merge_branch_access!(Branch28, 28);
+    merge_branch_access!(Branch29, 29);
+
 
     const C: &'static [ToolArg<Session>] = &[];
     let mut out = Cow::Borrowed(C);
@@ -210,8 +220,26 @@ impl ToolInvocation for Session {
         if let Some(b) = self.merge_branches.get(21) {
           b.args::<Self, Branch21>(&mut out);
         }
+        if let Some(b) = self.merge_branches.get(22) {
+          b.args::<Self, Branch22>(&mut out);
+        }
+        if let Some(b) = self.merge_branches.get(23) {
+          b.args::<Self, Branch23>(&mut out);
+        }
+        if let Some(b) = self.merge_branches.get(24) {
+          b.args::<Self, Branch24>(&mut out);
+        }
+        if let Some(b) = self.merge_branches.get(25) {
+          b.args::<Self, Branch25>(&mut out);
+        }
+        if let Some(b) = self.merge_branches.get(26) {
+          b.args::<Self, Branch26>(&mut out);
+        }
+        if let Some(b) = self.merge_branches.get(27) {
+          b.args::<Self, Branch27>(&mut out);
+        }
 
-        assert!(self.merge_branches.len() < 22)
+        assert!(self.merge_branches.len() < 28)
       },
       _ => { return None; },
     }
@@ -311,7 +339,7 @@ const RUST_FORK_BASE_BRANCH: &'static str = "fork-base";
 const FORK_HEAD_BRANCH: &'static str = "merge-head";
 
 const BRANCHES_URL: &'static str = RUST_URL;
-const MERGE_BRANCHES: &'static [&'static str] = &[
+const MERGE_BRANCHES: &'static [&'static str; 22] = &[
   "rustc-trans-addr-space",
   "addr-space-attr",
   "amdgcn-dispatch-ptr-intrinsic",
@@ -333,6 +361,7 @@ const MERGE_BRANCHES: &'static [&'static str] = &[
   "interface-pub-setup-callbacks",
   "spirv-llvm-target",
   "no-zero-sized-array-padding",
+  "geobacter-version",
 ];
 
 tool_argument! {
